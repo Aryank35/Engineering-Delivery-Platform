@@ -1,0 +1,38 @@
+{
+  "name": "engineering-operations-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Engineering Operations Platform — single source of truth for the software delivery lifecycle",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "db:generate": "pnpm --filter @eop/database db:generate",
+    "db:migrate": "pnpm --filter @eop/database db:migrate",
+    "db:migrate:deploy": "pnpm --filter @eop/database db:migrate:deploy",
+    "db:push": "pnpm --filter @eop/database db:push",
+    "db:seed": "pnpm --filter @eop/database db:seed",
+    "db:studio": "pnpm --filter @eop/database db:studio",
+    "docker:up": "docker compose up -d postgres redis",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  }
+}

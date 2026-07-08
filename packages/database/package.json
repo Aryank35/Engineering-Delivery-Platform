@@ -1,0 +1,45 @@
+{
+  "name": "@eop/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./generated/client/index.js",
+  "types": "./generated/client/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./generated/client/index.d.ts",
+      "default": "./generated/client/index.js"
+    }
+  },
+  "files": [
+    "generated",
+    "prisma"
+  ],
+  "scripts": {
+    "build": "prisma generate",
+    "db:generate": "prisma generate",
+    "dev": "prisma generate --watch",
+    "typecheck": "prisma generate && tsc --noEmit -p tsconfig.json",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force",
+    "lint": "eslint prisma",
+    "test": "echo \"@eop/database: no unit tests\" && exit 0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1"
+  },
+  "devDependencies": {
+    "@eop/shared": "workspace:*",
+    "@node-rs/argon2": "^2.0.2",
+    "prisma": "^6.2.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

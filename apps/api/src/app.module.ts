@@ -1,0 +1,44 @@
+import { Module } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AppConfigModule } from './config/config.module';
+import { AppConfigService } from './config/app-config.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { SecurityModule } from './security/security.module';
+import { AuditModule } from './audit/audit.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { HealthModule } from './health/health.module';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+
+@Module({
+  imports: [
+    AppConfigModule,
+    ThrottlerModule.forRootAsync({
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        throttlers: [{ ttl: config.throttle.ttl * 1000, limit: config.throttle.limit }],
+      }),
+    }),
+    PrismaModule,
+    SecurityModule,
+    AuditModule,
+    UsersModule,
+    AuthModule,
+    HealthModule,
+  ],
+  providers: [
+    // Order matters: throttle -> authenticate -> role check -> permission check.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+  ],
+})
+export class AppModule {}

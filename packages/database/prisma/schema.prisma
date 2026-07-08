@@ -1,0 +1,143 @@
+// Engineering Operations Platform — Prisma schema
+// Phase 1: Authentication, RBAC and the audit trail foundation.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleKey {
+  ADMIN
+  ENGINEERING_MANAGER
+  BUSINESS_ANALYST
+  DEVELOPER
+  QA_ENGINEER
+  VIEWER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  avatarUrl    String?
+  timezone     String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  roles         UserRole[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]     @relation("AuditActor")
+
+  @@index([isActive])
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         RoleKey  @unique
+  name        String
+  description String
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  resource    String
+  action      String
+  description String
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@index([resource])
+  @@map("permissions")
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// A rotating refresh token. `family` groups a chain of rotated tokens so that
+// reuse of a revoked token can revoke the entire chain (theft detection).
+model RefreshToken {
+  id                String    @id @default(cuid())
+  userId            String
+  family            String
+  tokenHash         String
+  userAgent         String?
+  ip                String?
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  replacedByTokenId String?
+  createdAt         DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// Immutable record of every meaningful mutation across the platform.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
