@@ -42,6 +42,9 @@ export const configuration = () => {
       ttl: Number.parseInt(env.THROTTLE_TTL ?? '60', 10),
       limit: Number.parseInt(env.THROTTLE_LIMIT ?? '120', 10),
     },
+    realtime: {
+      redisEnabled: env.REALTIME_REDIS_ENABLED === 'true',
+    },
   };
 };
 

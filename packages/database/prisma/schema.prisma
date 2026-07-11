@@ -26,16 +26,23 @@ model User {
   passwordHash String
   firstName    String
   lastName     String
-  avatarUrl    String?
-  timezone     String?
-  isActive     Boolean   @default(true)
+  avatarUrl           String?
+  timezone            String?
+  capacityHoursPerDay Float     @default(6)
+  isActive            Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   roles         UserRole[]
   refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]     @relation("AuditActor")
+  auditLogs     AuditLog[]         @relation("AuditActor")
+  reportedItems WorkItem[]         @relation("Reporter")
+  assignedItems WorkItem[]         @relation("Assignee")
+  comments      Comment[]
+  activities    WorkItemActivity[] @relation("ActivityActor")
+  timeLogs      TimeLog[]
+  activeTimer   ActiveTimer?
 
   @@index([isActive])
   @@map("users")
@@ -140,4 +147,222 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// --- Phase 2: work-item hierarchy ------------------------------------------
+
+enum WorkItemType {
+  REQUIREMENT
+  EPIC
+  STORY
+  TASK
+}
+
+enum WorkItemStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  IN_QA
+  DONE
+  CANCELLED
+}
+
+enum Priority {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityType {
+  CREATED
+  FIELD_CHANGED
+}
+
+// A single canonical work item. The type + self-referential parent express the
+// Requirement → Epic → Story → Task hierarchy.
+model WorkItem {
+  id          String         @id @default(cuid())
+  number      Int            @unique @default(autoincrement())
+  type        WorkItemType
+  title       String
+  description String?
+  status      WorkItemStatus @default(BACKLOG)
+  priority    Priority       @default(NONE)
+  storyPoints Int?
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  parentId String?
+  parent   WorkItem?  @relation("Hierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children WorkItem[] @relation("Hierarchy")
+
+  reporterId String
+  reporter   User   @relation("Reporter", fields: [reporterId], references: [id], onDelete: Restrict)
+
+  assigneeId String?
+  assignee   User?   @relation("Assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  sprintId String?
+  sprint   Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  // Ordering within a board column (same sprint + status). Lower = higher.
+  rank     Float   @default(0)
+
+  labels     WorkItemLabel[]
+  comments   Comment[]
+  activities WorkItemActivity[]
+  timeLogs   TimeLog[]
+  timers     ActiveTimer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([priority])
+  @@index([parentId])
+  @@index([assigneeId])
+  @@index([reporterId])
+  @@index([sprintId, status])
+  @@map("work_items")
+}
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+// A time-boxed iteration. Work items are assigned to a sprint for board + capacity.
+model Sprint {
+  id        String       @id @default(cuid())
+  name      String
+  goal      String?
+  status    SprintStatus @default(PLANNED)
+  startDate DateTime
+  endDate   DateTime
+  // Optional per-status WIP limits, e.g. { "IN_PROGRESS": 3 }.
+  wipLimits Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  workItems WorkItem[]
+
+  @@index([status])
+  @@map("sprints")
+}
+
+// --- Phase 4: time tracking ------------------------------------------------
+
+enum TimeLogSource {
+  TIMER
+  MANUAL
+}
+
+enum TimerStatus {
+  RUNNING
+  PAUSED
+}
+
+// A finalized chunk of time spent on a work item by a user.
+model TimeLog {
+  id          String        @id @default(cuid())
+  workItemId  String
+  userId      String
+  seconds     Int
+  description String?
+  source      TimeLogSource @default(MANUAL)
+  spentOn     DateTime      @db.Date
+  startedAt   DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workItem WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, spentOn])
+  @@index([workItemId])
+  @@map("time_logs")
+}
+
+// A user's single in-progress stopwatch (start/pause/resume/stop → TimeLog).
+model ActiveTimer {
+  id                 String      @id @default(cuid())
+  userId             String      @unique
+  workItemId         String
+  status             TimerStatus @default(RUNNING)
+  accumulatedSeconds Int         @default(0)
+  startedAt          DateTime    @default(now())
+  lastStartedAt      DateTime?
+  description        String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workItem WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+
+  @@map("active_timers")
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workItems WorkItemLabel[]
+
+  @@map("labels")
+}
+
+model WorkItemLabel {
+  workItemId String
+  labelId    String
+
+  workItem WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  label    Label    @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([workItemId, labelId])
+  @@index([labelId])
+  @@map("work_item_labels")
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  workItemId String
+  authorId   String
+  body       String
+  editedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  workItem WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([workItemId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+// Purpose-built timeline feed for a work item (created + per-field changes).
+model WorkItemActivity {
+  id         String       @id @default(cuid())
+  workItemId String
+  actorId    String?
+  type       ActivityType
+  field      String?
+  data       Json?
+  createdAt  DateTime     @default(now())
+
+  workItem WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  actor    User?    @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([workItemId])
+  @@index([createdAt])
+  @@map("work_item_activities")
 }

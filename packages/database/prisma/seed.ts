@@ -84,11 +84,31 @@ async function seedAdmin() {
   console.log(`  ✓ admin user ${email}`);
 }
 
+const DEFAULT_LABELS: Array<{ name: string; color: string }> = [
+  { name: 'Bug', color: '#ef4444' },
+  { name: 'Feature', color: '#7c3aed' },
+  { name: 'Tech Debt', color: '#f59e0b' },
+  { name: 'Documentation', color: '#3b82f6' },
+  { name: 'Blocked', color: '#dc2626' },
+];
+
+async function seedLabels() {
+  for (const label of DEFAULT_LABELS) {
+    await prisma.label.upsert({
+      where: { name: label.name },
+      update: { color: label.color },
+      create: label,
+    });
+  }
+  console.log(`  ✓ ${DEFAULT_LABELS.length} labels`);
+}
+
 async function main() {
   console.log('Seeding database...');
   await seedPermissions();
   await seedRoles();
   await seedAdmin();
+  await seedLabels();
   console.log('Seed complete.');
 }
 

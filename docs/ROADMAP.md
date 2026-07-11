@@ -19,31 +19,73 @@ React/Vite web shell.
   profile, admin Users management, Audit log viewer.
 - **Tests:** hashing, token service, RBAC guard logic, auth e2e; web auth-flow tests.
 
-## Phase 2 — Work-item hierarchy (Requirement → Epic → Story → Task)
+## Phase 2 — Work-item hierarchy (Requirement → Epic → Story → Task) ✅
 
-Canonical work items with status/priority/labels/assignee/estimates, activity timeline,
-comments, full CRUD + filtering, and audit. Web: item list + detail views.
+- **DB:** `WorkItem` (self-referential hierarchy, auto `EOP-n` key), `Label`, `WorkItemLabel`,
+  `Comment`, `WorkItemActivity`.
+- **API:** work-items CRUD with parent-type + cycle validation, per-field activity diffing,
+  status→`completedAt` automation, filtering/pagination; comments (author/moderator
+  authorization); per-item activity timeline; labels CRUD. All audited.
+- **Web:** work list with filters, create dialog, and a full detail page (inline field editing,
+  labels editor, child items, and a merged comment + activity timeline). Labels admin page.
+- **Tests:** hierarchy rules, activity diffing, status automation, comment access; badge rendering.
 
-## Phase 3 — Sprints & Kanban
+See [phase-02-work-items.md](./phase-02-work-items.md).
 
-Sprint planning with capacity calculation, drag-and-drop Kanban board, **real-time**
-board sync via Socket.IO (Redis adapter), WIP limits, sprint burndown.
+## Phase 3 — Sprints & Kanban ✅
 
-## Phase 4 — Time tracking & Personal dashboard
+- **DB:** `Sprint` (status, dates, WIP limits); `WorkItem` gains `sprintId` + board `rank`;
+  `User` gains `capacityHoursPerDay`.
+- **API:** sprint CRUD + start/complete, plan (add/remove items), board (columns by status),
+  drag-to-move with fractional ranking + WIP metadata, capacity/points analytics. **Real-time**
+  Socket.IO gateway (JWT-authenticated, sprint rooms) with an optional Redis adapter for
+  multi-node scaling. All audited.
+- **Web:** sprints list, Kanban board with **drag-and-drop** (dnd-kit) that live-updates across
+  clients, sprint planning dialog, and a capacity/points analytics panel.
+- **Tests:** rank midpoint computation, sprint analytics/capacity, `businessDaysBetween`,
+  board drop resolver.
 
-Start/pause/resume/stop timers, manual time logs, per-developer dashboard (my work,
-my day, logged time), activity timeline.
+See [phase-03-sprints-board.md](./phase-03-sprints-board.md).
 
-## Phase 5 — Dashboards & analytics
+> A time-series **burndown chart** and velocity trends are deferred to Phase 5 (Analytics),
+> which introduces the charting layer; Phase 3 ships points/capacity summaries.
 
-Manager, QA, Release, and Branch/Environment dashboards; sprint & release analytics
-(velocity, burndown, cycle time, defect trends) with charts.
+## Phase 4 — Time tracking & Personal dashboard ✅
 
-## Phase 6 — Integrations, automation & notifications
+- **DB:** `TimeLog` (timer + manual entries) and `ActiveTimer` (one per user);
+  `User.capacityHoursPerDay` (added in Phase 3) feeds capacity views.
+- **API:** stopwatch (start/pause/resume/stop → time log), manual logs CRUD (own),
+  per-work-item totals, and a personal summary (today/week totals, week-by-day, assigned
+  work by status, recent logs). All audited.
+- **Web:** personal dashboard (time stats, week chart, my work, recent logs), a global
+  running-timer widget in the top bar, and a per-work-item time panel (timer + manual log +
+  log history).
+- **Tests:** elapsed-time math, timer→log commit, minute→second conversion, formatting.
 
-GitHub integration (PR/commit/branch webhooks → status automation), Jira adapter
-(optional), BullMQ automations (daily standup summary, release notes, risk alerts),
-in-app + real-time notifications.
+See [phase-04-time-tracking.md](./phase-04-time-tracking.md).
+
+## Phase 5 — Dashboards & analytics ✅
+
+- **API:** an analytics module computing overview (status distribution, weekly throughput,
+  cycle time from status-change history, workload by assignee, time logged by user), sprint
+  **velocity**, and **QA/defect** metrics (open vs resolved, by week, by status); plus the
+  sprint **burndown** endpoint (ideal vs actual remaining points — deferred from Phase 3).
+- **Web:** an **Insights** dashboard (Manager overview + QA & Defects tabs) and a burndown
+  chart on the sprint board, using a validated, colorblind-safe, theme-aware chart palette
+  (Recharts) with legends, hover tooltips and one-axis charts.
+- **Tests:** velocity mapping, burndown series; chart helpers.
+
+See [phase-05-analytics.md](./phase-05-analytics.md).
+
+> **Release** and **Branch/Environment** dashboards move to Phase 6 — they need Release and
+> Branch/Environment domain models that pair naturally with the GitHub integration landing there.
+
+## Phase 6 — Integrations, releases, automation & notifications
+
+GitHub integration (PR/commit/branch webhooks → status automation), **Release management**
+and **Branch/Environment tracking** dashboards (moved from Phase 5, paired with GitHub),
+Jira adapter (optional), BullMQ automations (daily standup summary, release notes, risk
+alerts), in-app + real-time notifications.
 
 ## Phase 7 — AI assistant, search & polish
 

@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
+import { RedisIoAdapter } from './realtime/redis-io.adapter';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +21,18 @@ async function bootstrap(): Promise<void> {
     exposedHeaders: ['x-request-id'],
   });
   app.enableShutdownHooks();
+
+  // Real-time: scale Socket.IO across nodes via Redis when explicitly enabled.
+  if (config.realtime.redisEnabled && config.redisUrl) {
+    try {
+      const redisAdapter = new RedisIoAdapter(app);
+      await redisAdapter.connect(config.redisUrl);
+      app.useWebSocketAdapter(redisAdapter);
+      logger.log('Socket.IO Redis adapter enabled');
+    } catch {
+      logger.warn('Redis adapter unavailable — falling back to in-memory Socket.IO');
+    }
+  }
 
   await app.listen(config.port);
   logger.log(`API listening on http://localhost:${config.port}/${config.globalPrefix}`);

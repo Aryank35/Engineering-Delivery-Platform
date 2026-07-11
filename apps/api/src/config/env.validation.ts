@@ -17,6 +17,9 @@ export const envSchema = z.object({
 
   THROTTLE_TTL: z.coerce.number().int().positive().default(60),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(120),
+
+  // Enable the Socket.IO Redis adapter (multi-node real-time). Requires REDIS_URL.
+  REALTIME_REDIS_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,5 +1,15 @@
 import { NavLink } from 'react-router-dom';
-import { Boxes, LayoutDashboard, ScrollText, Users, type LucideIcon } from 'lucide-react';
+import {
+  BarChart3,
+  Boxes,
+  KanbanSquare,
+  LayoutDashboard,
+  ListTodo,
+  ScrollText,
+  Tags,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import { PERMISSIONS, type PermissionKey } from '@eop/shared';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -14,6 +24,10 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/work', label: 'Work', icon: ListTodo, permission: PERMISSIONS.WORKITEM_READ },
+  { to: '/sprints', label: 'Sprints', icon: KanbanSquare, permission: PERMISSIONS.SPRINT_READ },
+  { to: '/insights', label: 'Insights', icon: BarChart3, permission: PERMISSIONS.ANALYTICS_READ },
+  { to: '/labels', label: 'Labels', icon: Tags, permission: PERMISSIONS.LABEL_READ },
   { to: '/users', label: 'Users', icon: Users, permission: PERMISSIONS.USER_READ },
   { to: '/audit', label: 'Audit Log', icon: ScrollText, permission: PERMISSIONS.AUDIT_READ },
 ];
@@ -50,7 +64,7 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="border-t p-4 text-xs text-muted-foreground">Phase 1 · Auth &amp; RBAC</div>
+      <div className="border-t p-4 text-xs text-muted-foreground">Phase 5 · Analytics</div>
     </aside>
   );
 }

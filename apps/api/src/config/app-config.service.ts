@@ -47,4 +47,7 @@ export class AppConfigService {
   get throttle(): AppConfiguration['throttle'] {
     return this.get('throttle');
   }
+  get realtime(): AppConfiguration['realtime'] {
+    return this.get('realtime');
+  }
 }

@@ -5,8 +5,10 @@ A single source of truth for an engineering team's delivery lifecycle —
 task flows through its full lifecycle and any change fans out to dashboards, reports and
 metrics without duplicate data entry.
 
-This repository is built incrementally in phases. **Phase 1 (Authentication & RBAC)** is
-complete; see the [roadmap](docs/ROADMAP.md) for what comes next.
+This repository is built incrementally in phases. **Phase 1 (Authentication & RBAC)**,
+**Phase 2 (Work-item hierarchy)**, **Phase 3 (Sprints & Kanban)**, **Phase 4 (Time tracking
+& personal dashboard)** and **Phase 5 (Dashboards & analytics)** are complete; see the
+[roadmap](docs/ROADMAP.md) for what comes next.
 
 ## Tech stack
 
@@ -102,6 +104,43 @@ RUN_E2E=1 pnpm --filter @eop/api test:e2e
   theme, admin user management, and an audit-log viewer.
 
 Full details, API reference and the permission matrix: [docs/phase-01-auth-rbac.md](docs/phase-01-auth-rbac.md).
+
+## Phase 2 — Work-item hierarchy
+
+- Single canonical **WorkItem** modelling Requirement → Epic → Story → Task, with an
+  auto-generated `EOP-n` key, status lifecycle, priority, assignee, labels, estimates and dates.
+- Hierarchy + cycle validation, per-field **activity timeline**, threaded **comments**, and a
+  **label** catalogue — all RBAC-gated and audited.
+- Web: filterable work list, create dialog, and a full detail page (inline editing, labels
+  editor, child items, merged comment + activity feed); labels admin page.
+
+Full details and API reference: [docs/phase-02-work-items.md](docs/phase-02-work-items.md).
+
+## Phase 3 — Sprints & Kanban
+
+- **Sprints** (plan → active → complete) with items, WIP limits, and points/capacity analytics.
+- **Kanban board** with drag-and-drop (dnd-kit); moves compute a fractional rank server-side.
+- **Real-time** board sync via a JWT-authenticated Socket.IO gateway (sprint rooms); optional
+  Redis adapter (`REALTIME_REDIS_ENABLED=true`) for multi-node scaling.
+
+Full details and API reference: [docs/phase-03-sprints-board.md](docs/phase-03-sprints-board.md).
+
+## Phase 4 — Time tracking & personal dashboard
+
+- **Stopwatch** (start/pause/resume/stop) and **manual time logs** per work item.
+- **Personal dashboard**: today/week totals, a week chart, assigned work by status, recent logs.
+- A **global running-timer widget** in the top bar and a per-work-item time panel.
+
+Full details and API reference: [docs/phase-04-time-tracking.md](docs/phase-04-time-tracking.md).
+
+## Phase 5 — Dashboards & analytics
+
+- **Insights** dashboard: throughput, velocity, cycle time, workload, time logged, and a
+  QA/defects view — plus a **sprint burndown** chart on the board.
+- Charts use a validated, colorblind-safe, **theme-aware** palette (Recharts) with legends,
+  hover tooltips and single-axis encodings.
+
+Full details and API reference: [docs/phase-05-analytics.md](docs/phase-05-analytics.md).
 
 ## Notes
 

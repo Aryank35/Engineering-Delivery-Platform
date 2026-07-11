@@ -22,6 +22,17 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     commonjsOptions: { include: [/@eop[\\/]shared/, /node_modules/] },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'vendor-realtime': ['socket.io-client'],
+          'vendor-charts': ['recharts'],
+        },
+      },
+    },
   },
   test: {
     environment: 'jsdom',
