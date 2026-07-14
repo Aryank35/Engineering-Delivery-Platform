@@ -15,6 +15,7 @@ import { LabelsPage } from '@/features/labels/labels-page';
 import { SprintsPage } from '@/features/sprints/sprints-list-page';
 import { SprintBoardPage } from '@/features/sprints/board/sprint-board-page';
 import { InsightsPage } from '@/features/analytics/insights-page';
+import { NotificationsPage } from '@/features/notifications/notifications-page';
 
 export function App() {
   return (
@@ -28,6 +29,7 @@ export function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route element={<RequirePermissionRoute permission={PERMISSIONS.WORKITEM_READ} />}>
             <Route path="/work" element={<WorkItemsPage />} />
             <Route path="/work/:id" element={<WorkItemDetailPage />} />

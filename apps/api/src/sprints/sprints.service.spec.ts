@@ -3,6 +3,7 @@ import { SprintsService } from './sprints.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { AuditService } from '../audit/audit.service';
 import type { RealtimeService } from '../realtime/realtime.service';
+import type { NotificationsService } from '../notifications/notifications.service';
 
 function makeService() {
   const prisma = {
@@ -11,10 +12,12 @@ function makeService() {
   };
   const audit = { record: jest.fn().mockResolvedValue(undefined) };
   const realtime = { emitBoardChanged: jest.fn(), emitSprintsChanged: jest.fn() };
+  const notifications = { emit: jest.fn(), emitToMany: jest.fn() };
   const service = new SprintsService(
     prisma as unknown as PrismaService,
     audit as unknown as AuditService,
     realtime as unknown as RealtimeService,
+    notifications as unknown as NotificationsService,
   );
   return { service, prisma };
 }

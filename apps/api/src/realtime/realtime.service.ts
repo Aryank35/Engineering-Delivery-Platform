@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Server } from 'socket.io';
+import type { NotificationPushPayload } from '@eop/shared';
 
 /**
  * Thin broadcast facade. The gateway registers the Socket.IO server here on
@@ -23,5 +24,19 @@ export class RealtimeService {
   /** Notify sprint-list subscribers that the set of sprints changed. */
   emitSprintsChanged(): void {
     this.server?.to('sprints').emit('sprints:changed', {});
+  }
+
+  /**
+   * Push a freshly created notification to its recipient's personal room. The
+   * payload is just enough to raise a toast; the client refetches the list and
+   * unread count for the source of truth.
+   */
+  emitNotification(userId: string, payload: NotificationPushPayload): void {
+    this.server?.to(`user:${userId}`).emit('notification:new', payload);
+  }
+
+  /** Signal a user's other sessions that read-state changed (cross-tab sync). */
+  emitNotificationsRead(userId: string): void {
+    this.server?.to(`user:${userId}`).emit('notifications:read', {});
   }
 }

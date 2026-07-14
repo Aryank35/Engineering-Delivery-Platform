@@ -28,6 +28,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { NotificationsService, type NotificationSpec } from '../notifications/notifications.service';
 import type { ClientContext } from '../common/utils/request-context';
 import {
   ACTIVITY_INCLUDE,
@@ -62,6 +63,7 @@ export class WorkItemsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // --- Work items -------------------------------------------------------------
@@ -111,6 +113,9 @@ export class WorkItemsService {
       after: { key: workItemKey(created.number), type: created.type, title: created.title },
       ...ctx,
     });
+    if (created.assigneeId) {
+      await this.notifications.emit(this.assignedNotification(created, actor));
+    }
     return toDetail(created);
   }
 
@@ -165,6 +170,7 @@ export class WorkItemsService {
     const existing = await this.getDetailRow(id);
     const data: Prisma.WorkItemUpdateInput = {};
     const activities: PendingActivity[] = [];
+    let newAssigneeId: string | null = null;
 
     if (input.title !== undefined && input.title !== existing.title) {
       data.title = input.title;
@@ -204,6 +210,7 @@ export class WorkItemsService {
 
     if (input.assigneeId !== undefined && input.assigneeId !== existing.assigneeId) {
       const toName = input.assigneeId ? (await this.assertUserExists(input.assigneeId)).name : null;
+      newAssigneeId = input.assigneeId ?? null;
       data.assignee = input.assigneeId
         ? { connect: { id: input.assigneeId } }
         : { disconnect: true };
@@ -283,6 +290,9 @@ export class WorkItemsService {
     });
     if (updated.sprintId) {
       this.realtime.emitBoardChanged(updated.sprintId, 'updated');
+    }
+    if (newAssigneeId) {
+      await this.notifications.emit(this.assignedNotification(updated, actor));
     }
     return toDetail(updated);
   }
@@ -394,7 +404,13 @@ export class WorkItemsService {
     actor: AuthUser,
     ctx: ClientContext,
   ): Promise<CommentDto> {
-    await this.assertWorkItemExists(workItemId);
+    const workItem = await this.prisma.workItem.findUnique({
+      where: { id: workItemId },
+      select: { id: true, number: true, title: true, assigneeId: true, reporterId: true },
+    });
+    if (!workItem) {
+      throw new NotFoundException('Work item not found');
+    }
     const comment = await this.prisma.comment.create({
       data: { workItemId, authorId: actor.id, body: input.body },
       include: COMMENT_INCLUDE,
@@ -406,6 +422,16 @@ export class WorkItemsService {
       actor,
       metadata: { workItemId },
       ...ctx,
+    });
+    // Notify the item's assignee and reporter (the comment author is skipped).
+    await this.notifications.emitToMany([workItem.assigneeId, workItem.reporterId], {
+      type: 'COMMENT_ADDED',
+      title: `New comment on ${workItemKey(workItem.number)}`,
+      body: `${this.fullName(actor)}: ${this.commentPreview(input.body)}`,
+      link: `/work/${workItem.id}`,
+      entityType: 'WorkItem',
+      entityId: workItem.id,
+      actorId: actor.id,
     });
     return toComment(comment);
   }
@@ -600,5 +626,27 @@ export class WorkItemsService {
 
   private fullName(user: { firstName: string; lastName: string }): string {
     return `${user.firstName} ${user.lastName}`.trim();
+  }
+
+  /** Build the "assigned to you" notification for a work item's current assignee. */
+  private assignedNotification(
+    item: { id: string; number: number; title: string; assigneeId: string | null },
+    actor: AuthUser,
+  ): NotificationSpec {
+    return {
+      userId: item.assigneeId as string,
+      type: 'WORK_ITEM_ASSIGNED',
+      title: `${workItemKey(item.number)} was assigned to you`,
+      body: item.title,
+      link: `/work/${item.id}`,
+      entityType: 'WorkItem',
+      entityId: item.id,
+      actorId: actor.id,
+    };
+  }
+
+  private commentPreview(body: string): string {
+    const trimmed = body.trim();
+    return trimmed.length > 120 ? `${trimmed.slice(0, 117)}…` : trimmed;
   }
 }

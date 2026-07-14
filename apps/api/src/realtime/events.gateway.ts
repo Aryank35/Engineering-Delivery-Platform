@@ -45,6 +45,9 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       });
       if (payload.type !== 'access') throw new Error('Invalid token type');
       client.data.userId = payload.sub;
+      // Every connection auto-joins its owner's personal room so domain
+      // services can push notifications with `to('user:<id>')`.
+      await client.join(`user:${payload.sub}`);
     } catch {
       client.disconnect(true);
     }

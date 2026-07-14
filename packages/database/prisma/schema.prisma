@@ -21,18 +21,18 @@ enum RoleKey {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  firstName    String
-  lastName     String
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
   avatarUrl           String?
   timezone            String?
   capacityHoursPerDay Float     @default(6)
   isActive            Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  lastLoginAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   roles         UserRole[]
   refreshTokens RefreshToken[]
@@ -43,6 +43,9 @@ model User {
   activities    WorkItemActivity[] @relation("ActivityActor")
   timeLogs      TimeLog[]
   activeTimer   ActiveTimer?
+
+  notifications          Notification[] @relation("NotificationRecipient")
+  triggeredNotifications Notification[] @relation("NotificationActor")
 
   @@index([isActive])
   @@map("users")
@@ -365,4 +368,42 @@ model WorkItemActivity {
   @@index([workItemId])
   @@index([createdAt])
   @@map("work_item_activities")
+}
+
+// --- Phase 6: notifications ------------------------------------------------
+
+enum NotificationType {
+  WORK_ITEM_ASSIGNED
+  COMMENT_ADDED
+  MENTION
+  SPRINT_STARTED
+  SPRINT_COMPLETED
+  SYSTEM
+}
+
+// A personal, in-app notification delivered to a single recipient. Created by
+// domain services (assignment, comments, …) and pushed live over Socket.IO to
+// the recipient's `user:<id>` room.
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  title      String
+  body       String?
+  // Optional link back to the originating entity, both as a client route
+  // (`link`, e.g. /work/<id>) and as a typed reference for grouping/filtering.
+  entityType String?
+  entityId   String?
+  link       String?
+  actorId    String?
+  metadata   Json?
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user  User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

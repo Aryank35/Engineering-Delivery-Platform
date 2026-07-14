@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   BarChart3,
+  Bell,
   Boxes,
   KanbanSquare,
   LayoutDashboard,
@@ -27,6 +28,12 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/work', label: 'Work', icon: ListTodo, permission: PERMISSIONS.WORKITEM_READ },
   { to: '/sprints', label: 'Sprints', icon: KanbanSquare, permission: PERMISSIONS.SPRINT_READ },
   { to: '/insights', label: 'Insights', icon: BarChart3, permission: PERMISSIONS.ANALYTICS_READ },
+  {
+    to: '/notifications',
+    label: 'Notifications',
+    icon: Bell,
+    permission: PERMISSIONS.NOTIFICATION_READ,
+  },
   { to: '/labels', label: 'Labels', icon: Tags, permission: PERMISSIONS.LABEL_READ },
   { to: '/users', label: 'Users', icon: Users, permission: PERMISSIONS.USER_READ },
   { to: '/audit', label: 'Audit Log', icon: ScrollText, permission: PERMISSIONS.AUDIT_READ },
@@ -64,7 +71,7 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="border-t p-4 text-xs text-muted-foreground">Phase 5 · Analytics</div>
+      <div className="border-t p-4 text-xs text-muted-foreground">Phase 6 · Notifications</div>
     </aside>
   );
 }

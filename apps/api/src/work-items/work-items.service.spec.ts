@@ -4,6 +4,7 @@ import { WorkItemsService } from './work-items.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { AuditService } from '../audit/audit.service';
 import type { RealtimeService } from '../realtime/realtime.service';
+import type { NotificationsService } from '../notifications/notifications.service';
 
 const actor: AuthUser = {
   id: 'u1',
@@ -53,16 +54,18 @@ function makeService() {
     },
     label: { count: jest.fn() },
     user: { findUnique: jest.fn() },
-    comment: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
+    comment: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
   };
   const audit = { record: jest.fn().mockResolvedValue(undefined) };
   const realtime = { emitBoardChanged: jest.fn(), emitSprintsChanged: jest.fn() };
+  const notifications = { emit: jest.fn(), emitToMany: jest.fn() };
   const service = new WorkItemsService(
     prisma as unknown as PrismaService,
     audit as unknown as AuditService,
     realtime as unknown as RealtimeService,
+    notifications as unknown as NotificationsService,
   );
-  return { service, prisma, audit, realtime };
+  return { service, prisma, audit, realtime, notifications };
 }
 
 describe('shared hierarchy helpers', () => {
@@ -142,6 +145,35 @@ describe('WorkItemsService.create', () => {
     await expect(
       service.create({ type: 'TASK', title: 'x', parentId: 'p1', labelIds: [] }, actor, ctx),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+});
+
+describe('WorkItemsService.addComment', () => {
+  it('notifies the item’s assignee and reporter (author is excluded downstream)', async () => {
+    const { service, prisma, notifications } = makeService();
+    prisma.workItem.findUnique.mockResolvedValue({
+      id: 'w1',
+      number: 7,
+      title: 'Build feature',
+      assigneeId: 'u2',
+      reporterId: 'u3',
+    });
+    prisma.comment.create.mockResolvedValue({
+      id: 'c1',
+      workItemId: 'w1',
+      body: 'looks good',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      editedAt: null,
+      author: { id: 'u1', firstName: 'Dev', lastName: 'User', email: 'dev@eop.dev', avatarUrl: null },
+    });
+
+    await service.addComment('w1', { body: 'looks good' }, actor, ctx);
+
+    expect(notifications.emitToMany).toHaveBeenCalledWith(
+      ['u2', 'u3'],
+      expect.objectContaining({ type: 'COMMENT_ADDED', entityId: 'w1', actorId: 'u1' }),
+    );
   });
 });
 

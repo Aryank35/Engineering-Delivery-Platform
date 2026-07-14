@@ -80,12 +80,21 @@ See [phase-05-analytics.md](./phase-05-analytics.md).
 > **Release** and **Branch/Environment** dashboards move to Phase 6 — they need Release and
 > Branch/Environment domain models that pair naturally with the GitHub integration landing there.
 
-## Phase 6 — Integrations, releases, automation & notifications
+## Phase 6 — Integrations, releases, automation & notifications 🚧
 
-GitHub integration (PR/commit/branch webhooks → status automation), **Release management**
-and **Branch/Environment tracking** dashboards (moved from Phase 5, paired with GitHub),
-Jira adapter (optional), BullMQ automations (daily standup summary, release notes, risk
-alerts), in-app + real-time notifications.
+Delivered incrementally; the notification delivery channel lands first so later automations
+have somewhere to publish to.
+
+- **In-app + real-time notifications ✅** — `Notification` model; self-scoped feed API
+  (list/unread-count/mark-read/read-all); events for assignment, comments and sprint
+  start/complete; live push over the Socket.IO `user:<id>` room; topbar bell + notifications
+  page. See [phase-06-notifications.md](./phase-06-notifications.md).
+- GitHub integration (PR/commit/branch webhooks → status automation).
+- **Release management** and **Branch/Environment tracking** dashboards (moved from Phase 5,
+  paired with GitHub).
+- Jira adapter (optional).
+- BullMQ automations (daily standup summary, release notes, risk alerts) publishing to the
+  notification channel above.
 
 ## Phase 7 — AI assistant, search & polish
 

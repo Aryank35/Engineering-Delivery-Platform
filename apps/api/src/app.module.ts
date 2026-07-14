@@ -14,6 +14,7 @@ import { LabelsModule } from './labels/labels.module';
 import { SprintsModule } from './sprints/sprints.module';
 import { TimeModule } from './time/time.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -41,6 +42,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     SprintsModule,
     TimeModule,
     AnalyticsModule,
+    NotificationsModule,
     HealthModule,
   ],
   providers: [

@@ -22,6 +22,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { ClientContext } from '../common/utils/request-context';
 import { SUMMARY_INCLUDE, toSummary, toUserRef } from '../work-items/work-items.mapper';
 import { SPRINT_COUNT_INCLUDE, toSprintDto, type SprintRow } from './sprints.mapper';
@@ -35,6 +36,7 @@ export class SprintsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async create(input: CreateSprintInput, actor: AuthUser, ctx: ClientContext): Promise<SprintDto> {
@@ -133,7 +135,39 @@ export class SprintsService {
     });
     this.realtime.emitSprintsChanged();
     this.realtime.emitBoardChanged(id, 'sprint_status');
+    if (status === 'ACTIVE' || status === 'COMPLETED') {
+      await this.notifySprintParticipants(id, row.name, status, actor.id);
+    }
     return toSprintDto(row);
+  }
+
+  /** Notify everyone with an assigned item in the sprint that it started/completed. */
+  private async notifySprintParticipants(
+    sprintId: string,
+    sprintName: string,
+    status: 'ACTIVE' | 'COMPLETED',
+    actorId: string,
+  ): Promise<void> {
+    const rows = await this.prisma.workItem.findMany({
+      where: { sprintId, assigneeId: { not: null } },
+      select: { assigneeId: true },
+      distinct: ['assigneeId'],
+    });
+    const started = status === 'ACTIVE';
+    await this.notifications.emitToMany(
+      rows.map((r) => r.assigneeId),
+      {
+        type: started ? 'SPRINT_STARTED' : 'SPRINT_COMPLETED',
+        title: started ? `Sprint "${sprintName}" started` : `Sprint "${sprintName}" completed`,
+        body: started
+          ? 'A sprint you have work in has started.'
+          : 'A sprint you have work in has been completed.',
+        link: `/sprints/${sprintId}`,
+        entityType: 'Sprint',
+        entityId: sprintId,
+        actorId,
+      },
+    );
   }
 
   async remove(id: string, actor: AuthUser, ctx: ClientContext): Promise<{ success: true }> {

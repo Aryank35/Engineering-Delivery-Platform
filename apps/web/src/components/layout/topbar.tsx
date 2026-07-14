@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { ActiveTimerWidget } from '@/features/time/active-timer-widget';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 import { ThemeToggle } from './theme-toggle';
 import { UserMenu } from './user-menu';
 
@@ -17,6 +18,7 @@ export function Topbar() {
       <div className="font-semibold md:hidden">EOP</div>
       <div className="flex items-center gap-2">
         <ActiveTimerWidget />
+        <NotificationBell />
         <ThemeToggle />
         <UserMenu />
       </div>
