@@ -5,6 +5,8 @@ import {
   CheckCircle2,
   MessageSquare,
   Play,
+  Rocket,
+  Server,
   UserPlus,
   type LucideIcon,
 } from 'lucide-react';
@@ -17,6 +19,8 @@ const ICONS: Record<NotificationType, LucideIcon> = {
   MENTION: AtSign,
   SPRINT_STARTED: Play,
   SPRINT_COMPLETED: CheckCircle2,
+  RELEASE_PUBLISHED: Rocket,
+  DEPLOYMENT_STATUS: Server,
   SYSTEM: Bell,
 };
 

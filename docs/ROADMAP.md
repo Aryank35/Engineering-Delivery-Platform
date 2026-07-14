@@ -89,9 +89,15 @@ have somewhere to publish to.
   (list/unread-count/mark-read/read-all); events for assignment, comments and sprint
   start/complete; live push over the Socket.IO `user:<id>` room; topbar bell + notifications
   page. See [phase-06-notifications.md](./phase-06-notifications.md).
-- GitHub integration (PR/commit/branch webhooks → status automation).
-- **Release management** and **Branch/Environment tracking** dashboards (moved from Phase 5,
-  paired with GitHub).
+- **Release management & environment tracking ✅** — `Environment`, `Release` (work-item scope)
+  and `Deployment` models; releases/environments/deployments API with live-in derivation and a
+  per-environment status overview; release-published notifications; releases list + detail and
+  environments admin screens. See [phase-06-releases.md](./phase-06-releases.md). **Branch**
+  tracking stays with GitHub (branches come from git).
+- **GitHub integration ✅** — signed webhook ingestion (`push`/`pull_request`/`create`/`delete`);
+  `GitHubBranch`/`GitHubPullRequest`/`GitHubCommit` linked to work items by `EOP-<n>` references;
+  forward-only status automation (branch/commit → In Progress, PR opened → In Review, PR merged →
+  Done); work-item Development panel + Integrations page. See [phase-06-github.md](./phase-06-github.md).
 - Jira adapter (optional).
 - BullMQ automations (daily standup summary, release notes, risk alerts) publishing to the
   notification channel above.

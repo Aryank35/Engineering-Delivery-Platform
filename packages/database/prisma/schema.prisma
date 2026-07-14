@@ -47,6 +47,9 @@ model User {
   notifications          Notification[] @relation("NotificationRecipient")
   triggeredNotifications Notification[] @relation("NotificationActor")
 
+  createdReleases Release[]    @relation("ReleaseCreator")
+  deployments     Deployment[] @relation("DeploymentActor")
+
   @@index([isActive])
   @@map("users")
 }
@@ -214,11 +217,18 @@ model WorkItem {
   // Ordering within a board column (same sprint + status). Lower = higher.
   rank     Float   @default(0)
 
+  releaseId String?
+  release   Release? @relation(fields: [releaseId], references: [id], onDelete: SetNull)
+
   labels     WorkItemLabel[]
   comments   Comment[]
   activities WorkItemActivity[]
   timeLogs   TimeLog[]
   timers     ActiveTimer[]
+
+  githubBranches     GitHubBranch[]      @relation("WorkItemBranches")
+  githubPullRequests GitHubPullRequest[] @relation("WorkItemPullRequests")
+  githubCommits      GitHubCommit[]      @relation("WorkItemCommits")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -230,6 +240,7 @@ model WorkItem {
   @@index([assigneeId])
   @@index([reporterId])
   @@index([sprintId, status])
+  @@index([releaseId])
   @@map("work_items")
 }
 
@@ -378,6 +389,8 @@ enum NotificationType {
   MENTION
   SPRINT_STARTED
   SPRINT_COMPLETED
+  RELEASE_PUBLISHED
+  DEPLOYMENT_STATUS
   SYSTEM
 }
 
@@ -406,4 +419,149 @@ model Notification {
   @@index([userId, readAt])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// --- Phase 6: releases & environments --------------------------------------
+
+enum ReleaseStatus {
+  PLANNED
+  IN_PROGRESS
+  RELEASED
+  ROLLED_BACK
+  CANCELLED
+}
+
+enum DeploymentStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+  ROLLED_BACK
+}
+
+// A deployment target (Development, Staging, Production, …). `sortOrder` runs
+// from least to most production-like for consistent display.
+model Environment {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  name         String
+  description  String?
+  color        String   @default("#6b7280")
+  sortOrder    Int      @default(0)
+  isProduction Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  deployments Deployment[]
+
+  @@map("environments")
+}
+
+// A versioned release aggregating a set of work items, promoted across environments.
+model Release {
+  id          String        @id @default(cuid())
+  version     String        @unique
+  name        String?
+  notes       String?
+  status      ReleaseStatus @default(PLANNED)
+  targetDate  DateTime?
+  releasedAt  DateTime?
+  createdById String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  createdBy   User?        @relation("ReleaseCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  workItems   WorkItem[]
+  deployments Deployment[]
+
+  @@index([status])
+  @@map("releases")
+}
+
+// A deployment of a release to an environment, tracked through its lifecycle.
+model Deployment {
+  id            String           @id @default(cuid())
+  releaseId     String
+  environmentId String
+  status        DeploymentStatus @default(PENDING)
+  notes         String?
+  deployedById  String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  release     Release     @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Restrict)
+  deployedBy  User?       @relation("DeploymentActor", fields: [deployedById], references: [id], onDelete: SetNull)
+
+  @@index([releaseId])
+  @@index([environmentId, status])
+  @@map("deployments")
+}
+
+// --- Phase 6: GitHub integration -------------------------------------------
+
+// A git branch seen via webhooks, optionally linked to a work item by an
+// `EOP-<n>` reference in its name.
+model GitHubBranch {
+  id         String    @id @default(cuid())
+  repo       String
+  name       String
+  headSha    String?
+  workItemId String?
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  workItem WorkItem? @relation("WorkItemBranches", fields: [workItemId], references: [id], onDelete: SetNull)
+
+  @@unique([repo, name])
+  @@index([workItemId])
+  @@map("github_branches")
+}
+
+// A pull request seen via webhooks, linked to a work item by an `EOP-<n>`
+// reference in its head branch, title or body.
+model GitHubPullRequest {
+  id          String    @id @default(cuid())
+  repo        String
+  number      Int
+  title       String
+  url         String
+  state       String
+  merged      Boolean   @default(false)
+  authorLogin String?
+  headBranch  String?
+  baseBranch  String?
+  workItemId  String?
+  mergedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workItem WorkItem? @relation("WorkItemPullRequests", fields: [workItemId], references: [id], onDelete: SetNull)
+
+  @@unique([repo, number])
+  @@index([workItemId])
+  @@map("github_pull_requests")
+}
+
+// A pushed commit seen via webhooks, linked to a work item by an `EOP-<n>`
+// reference in its message.
+model GitHubCommit {
+  id          String    @id @default(cuid())
+  repo        String
+  sha         String
+  message     String
+  url         String?
+  authorName  String?
+  workItemId  String?
+  committedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  workItem WorkItem? @relation("WorkItemCommits", fields: [workItemId], references: [id], onDelete: SetNull)
+
+  @@unique([repo, sha])
+  @@index([workItemId])
+  @@map("github_commits")
 }

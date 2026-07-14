@@ -70,4 +70,16 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     client.join('sprints');
     return { ok: true };
   }
+
+  @SubscribeMessage('releases:join')
+  joinReleases(@ConnectedSocket() client: Socket) {
+    client.join('releases');
+    return { ok: true };
+  }
+
+  @SubscribeMessage('releases:leave')
+  leaveReleases(@ConnectedSocket() client: Socket) {
+    client.leave('releases');
+    return { ok: true };
+  }
 }

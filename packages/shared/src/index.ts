@@ -7,6 +7,8 @@ export * from './domain/work-items';
 export * from './domain/sprints';
 export * from './domain/time';
 export * from './domain/notifications';
+export * from './domain/releases';
+export * from './domain/github';
 
 // Contracts (zod schemas + inferred input types)
 export * from './contracts/pagination';
@@ -19,6 +21,7 @@ export * from './contracts/labels';
 export * from './contracts/sprints';
 export * from './contracts/time';
 export * from './contracts/notifications';
+export * from './contracts/releases';
 
 // Domain types
 export * from './types/auth';
@@ -28,3 +31,5 @@ export * from './types/sprints';
 export * from './types/time';
 export * from './types/analytics';
 export * from './types/notifications';
+export * from './types/releases';
+export * from './types/github';

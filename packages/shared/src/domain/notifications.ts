@@ -10,6 +10,8 @@ export const NOTIFICATION_TYPES = [
   'MENTION',
   'SPRINT_STARTED',
   'SPRINT_COMPLETED',
+  'RELEASE_PUBLISHED',
+  'DEPLOYMENT_STATUS',
   'SYSTEM',
 ] as const;
 
@@ -21,7 +23,15 @@ export const isNotificationType = (value: unknown): value is NotificationType =>
 export interface NotificationTypeMeta {
   label: string;
   /** lucide-react icon name rendered next to the notification. */
-  icon: 'UserPlus' | 'MessageSquare' | 'AtSign' | 'Play' | 'CheckCircle2' | 'Bell';
+  icon:
+    | 'UserPlus'
+    | 'MessageSquare'
+    | 'AtSign'
+    | 'Play'
+    | 'CheckCircle2'
+    | 'Rocket'
+    | 'Server'
+    | 'Bell';
 }
 
 export const NOTIFICATION_TYPE_META: Record<NotificationType, NotificationTypeMeta> = {
@@ -30,5 +40,7 @@ export const NOTIFICATION_TYPE_META: Record<NotificationType, NotificationTypeMe
   MENTION: { label: 'Mention', icon: 'AtSign' },
   SPRINT_STARTED: { label: 'Sprint started', icon: 'Play' },
   SPRINT_COMPLETED: { label: 'Sprint completed', icon: 'CheckCircle2' },
+  RELEASE_PUBLISHED: { label: 'Release', icon: 'Rocket' },
+  DEPLOYMENT_STATUS: { label: 'Deployment', icon: 'Server' },
   SYSTEM: { label: 'System', icon: 'Bell' },
 };

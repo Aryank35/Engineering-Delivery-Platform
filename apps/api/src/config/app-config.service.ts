@@ -50,4 +50,7 @@ export class AppConfigService {
   get realtime(): AppConfiguration['realtime'] {
     return this.get('realtime');
   }
+  get github(): AppConfiguration['github'] {
+    return this.get('github');
+  }
 }

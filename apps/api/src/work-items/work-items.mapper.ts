@@ -104,6 +104,7 @@ export function toSummary(row: WorkItemSummaryRow): WorkItemSummary {
     priority: row.priority as Priority,
     storyPoints: row.storyPoints,
     sprintId: row.sprintId,
+    releaseId: row.releaseId,
     assignee: toUserRef(row.assignee),
     parent: toRef(row.parent),
     labels: row.labels.map((l) => toLabel(l.label)),

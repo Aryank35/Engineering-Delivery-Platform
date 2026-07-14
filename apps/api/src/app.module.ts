@@ -15,6 +15,8 @@ import { SprintsModule } from './sprints/sprints.module';
 import { TimeModule } from './time/time.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ReleasesModule } from './releases/releases.module';
+import { GithubModule } from './github/github.module';
 import { HealthModule } from './health/health.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -43,6 +45,8 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     TimeModule,
     AnalyticsModule,
     NotificationsModule,
+    ReleasesModule,
+    GithubModule,
     HealthModule,
   ],
   providers: [

@@ -103,12 +103,36 @@ async function seedLabels() {
   console.log(`  ✓ ${DEFAULT_LABELS.length} labels`);
 }
 
+const DEFAULT_ENVIRONMENTS: Array<{
+  key: string;
+  name: string;
+  color: string;
+  sortOrder: number;
+  isProduction: boolean;
+}> = [
+  { key: 'development', name: 'Development', color: '#3b82f6', sortOrder: 0, isProduction: false },
+  { key: 'staging', name: 'Staging', color: '#f59e0b', sortOrder: 1, isProduction: false },
+  { key: 'production', name: 'Production', color: '#10b981', sortOrder: 2, isProduction: true },
+];
+
+async function seedEnvironments() {
+  for (const env of DEFAULT_ENVIRONMENTS) {
+    await prisma.environment.upsert({
+      where: { key: env.key },
+      update: { name: env.name, color: env.color, sortOrder: env.sortOrder, isProduction: env.isProduction },
+      create: env,
+    });
+  }
+  console.log(`  ✓ ${DEFAULT_ENVIRONMENTS.length} environments`);
+}
+
 async function main() {
   console.log('Seeding database...');
   await seedPermissions();
   await seedRoles();
   await seedAdmin();
   await seedLabels();
+  await seedEnvironments();
   console.log('Seed complete.');
 }
 

@@ -31,6 +31,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useLabels } from '@/features/labels/use-labels';
 import { workItemsApi } from './work-items.api';
 import { WorkItemTimePanel } from '@/features/time/work-item-time-panel';
+import { WorkItemDevPanel } from '@/features/github/work-item-dev-panel';
 import { CreateWorkItemDialog } from './create-work-item-dialog';
 import { LabelChip, PriorityBadge, StatusBadge, TypeBadge, TypeIcon } from './work-item-badges';
 import { WorkItemTimeline } from './work-item-timeline';
@@ -181,6 +182,8 @@ export function WorkItemDetailPage() {
           </div>
 
           <WorkItemTimePanel workItemId={item.id} />
+
+          <WorkItemDevPanel workItemId={item.id} />
 
           {childType ? (
             <Card>

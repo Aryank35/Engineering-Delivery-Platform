@@ -44,6 +44,13 @@ export const PERMISSIONS = {
 
   // Notifications (Phase 6) — self-scoped: read and manage your own notifications.
   NOTIFICATION_READ: 'notification:read',
+
+  // Releases & environments (Phase 6)
+  RELEASE_READ: 'release:read',
+  RELEASE_MANAGE: 'release:manage',
+
+  // Integrations (Phase 6) — GitHub and future connectors.
+  INTEGRATION_MANAGE: 'integration:manage',
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -84,6 +91,9 @@ export const PERMISSION_CATALOG: PermissionMeta[] = [
   meta(PERMISSIONS.TIME_LOG, 'Track and log time'),
   meta(PERMISSIONS.ANALYTICS_READ, 'View analytics dashboards'),
   meta(PERMISSIONS.NOTIFICATION_READ, 'Receive and manage your own notifications'),
+  meta(PERMISSIONS.RELEASE_READ, 'View releases, environments and deployments'),
+  meta(PERMISSIONS.RELEASE_MANAGE, 'Create and manage releases, environments and deployments'),
+  meta(PERMISSIONS.INTEGRATION_MANAGE, 'View and manage integrations (GitHub, …)'),
 ];
 
 const {
@@ -104,6 +114,9 @@ const {
   TIME_LOG,
   ANALYTICS_READ,
   NOTIFICATION_READ,
+  RELEASE_READ,
+  RELEASE_MANAGE,
+  INTEGRATION_MANAGE,
 } = PERMISSIONS;
 
 /**
@@ -130,6 +143,9 @@ export const ROLE_PERMISSIONS: Record<RoleKey, PermissionKey[]> = {
     TIME_LOG,
     ANALYTICS_READ,
     NOTIFICATION_READ,
+    RELEASE_READ,
+    RELEASE_MANAGE,
+    INTEGRATION_MANAGE,
   ],
   BUSINESS_ANALYST: [
     USER_READ,
@@ -144,6 +160,7 @@ export const ROLE_PERMISSIONS: Record<RoleKey, PermissionKey[]> = {
     TIME_LOG,
     ANALYTICS_READ,
     NOTIFICATION_READ,
+    RELEASE_READ,
   ],
   DEVELOPER: [
     USER_READ,
@@ -157,6 +174,7 @@ export const ROLE_PERMISSIONS: Record<RoleKey, PermissionKey[]> = {
     TIME_READ,
     TIME_LOG,
     NOTIFICATION_READ,
+    RELEASE_READ,
   ],
   QA_ENGINEER: [
     USER_READ,
@@ -170,8 +188,17 @@ export const ROLE_PERMISSIONS: Record<RoleKey, PermissionKey[]> = {
     TIME_LOG,
     ANALYTICS_READ,
     NOTIFICATION_READ,
+    RELEASE_READ,
   ],
-  VIEWER: [USER_READ, WORKITEM_READ, LABEL_READ, SPRINT_READ, TIME_READ, NOTIFICATION_READ],
+  VIEWER: [
+    USER_READ,
+    WORKITEM_READ,
+    LABEL_READ,
+    SPRINT_READ,
+    TIME_READ,
+    NOTIFICATION_READ,
+    RELEASE_READ,
+  ],
 };
 
 /** Resolve the effective permission set for a collection of roles. */

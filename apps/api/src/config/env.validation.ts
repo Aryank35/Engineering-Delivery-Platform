@@ -20,6 +20,10 @@ export const envSchema = z.object({
 
   // Enable the Socket.IO Redis adapter (multi-node real-time). Requires REDIS_URL.
   REALTIME_REDIS_ENABLED: z.enum(['true', 'false']).default('false'),
+
+  // Shared secret used to verify GitHub webhook signatures. Optional: when unset,
+  // the webhook endpoint refuses requests (integration is considered disabled).
+  GITHUB_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

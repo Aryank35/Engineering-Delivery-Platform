@@ -45,6 +45,9 @@ export const configuration = () => {
     realtime: {
       redisEnabled: env.REALTIME_REDIS_ENABLED === 'true',
     },
+    github: {
+      webhookSecret: env.GITHUB_WEBHOOK_SECRET,
+    },
   };
 };
 

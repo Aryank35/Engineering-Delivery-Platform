@@ -8,7 +8,9 @@ import { AppConfigService } from './config/app-config.service';
 import { RedisIoAdapter } from './realtime/redis-io.adapter';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  // `rawBody: true` preserves the unparsed request body (req.rawBody) so the
+  // GitHub webhook can verify its HMAC signature against the exact bytes sent.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   const config = app.get(AppConfigService);
   const logger = new Logger('Bootstrap');
 

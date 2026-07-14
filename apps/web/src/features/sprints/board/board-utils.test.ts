@@ -12,6 +12,7 @@ const card = (id: string, status: WorkItemSummary['status']): WorkItemSummary =>
   priority: 'NONE',
   storyPoints: null,
   sprintId: 's1',
+  releaseId: null,
   assignee: null,
   parent: null,
   labels: [],

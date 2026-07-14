@@ -16,6 +16,10 @@ import { SprintsPage } from '@/features/sprints/sprints-list-page';
 import { SprintBoardPage } from '@/features/sprints/board/sprint-board-page';
 import { InsightsPage } from '@/features/analytics/insights-page';
 import { NotificationsPage } from '@/features/notifications/notifications-page';
+import { ReleasesListPage } from '@/features/releases/releases-list-page';
+import { ReleaseDetailPage } from '@/features/releases/release-detail-page';
+import { EnvironmentsPage } from '@/features/releases/environments-page';
+import { IntegrationsPage } from '@/features/github/integrations-page';
 
 export function App() {
   return (
@@ -40,6 +44,14 @@ export function App() {
           </Route>
           <Route element={<RequirePermissionRoute permission={PERMISSIONS.ANALYTICS_READ} />}>
             <Route path="/insights" element={<InsightsPage />} />
+          </Route>
+          <Route element={<RequirePermissionRoute permission={PERMISSIONS.RELEASE_READ} />}>
+            <Route path="/releases" element={<ReleasesListPage />} />
+            <Route path="/releases/:id" element={<ReleaseDetailPage />} />
+            <Route path="/environments" element={<EnvironmentsPage />} />
+          </Route>
+          <Route element={<RequirePermissionRoute permission={PERMISSIONS.INTEGRATION_MANAGE} />}>
+            <Route path="/integrations" element={<IntegrationsPage />} />
           </Route>
           <Route element={<RequirePermissionRoute permission={PERMISSIONS.LABEL_READ} />}>
             <Route path="/labels" element={<LabelsPage />} />

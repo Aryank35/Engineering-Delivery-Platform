@@ -34,6 +34,7 @@ export interface WorkItemSummary {
   priority: Priority;
   storyPoints: number | null;
   sprintId: string | null;
+  releaseId: string | null;
   assignee: UserRef | null;
   parent: WorkItemRef | null;
   labels: LabelDto[];

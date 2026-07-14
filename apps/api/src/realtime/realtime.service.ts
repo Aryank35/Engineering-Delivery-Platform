@@ -26,6 +26,11 @@ export class RealtimeService {
     this.server?.to('sprints').emit('sprints:changed', {});
   }
 
+  /** Notify release/deployment subscribers that something changed. */
+  emitReleasesChanged(): void {
+    this.server?.to('releases').emit('releases:changed', {});
+  }
+
   /**
    * Push a freshly created notification to its recipient's personal room. The
    * payload is just enough to raise a toast; the client refetches the list and
